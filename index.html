@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jazz YOURNAME — 비 내리는 밤, 문 너머의 재즈</title>
+<title>Seokbeom's Private Club — 비 내리는 밤, 문 너머의 재즈</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,500;1,400;1,500&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -69,6 +69,18 @@ button:focus-visible{outline:1px solid var(--brass); outline-offset:2px;}
 body.entered .zlabel{opacity:1;}
 .zlabel:hover, .zlabel.hot{background:rgba(201,164,92,.95); color:#141118; border-color:var(--brass);}
 .zlabel.hidden{opacity:0 !important; pointer-events:none;}
+.bubble{
+  position:absolute; transform:translate(-50%,-115%); pointer-events:none; z-index:15;
+  background:rgba(18,16,22,.94); border:1px solid var(--brass-dim); border-radius:10px;
+  padding:10px 14px; max-width:250px; font-size:.84rem; line-height:1.55; color:var(--fg);
+  box-shadow:0 10px 30px rgba(0,0,0,.5); transition:opacity .25s ease; opacity:1;
+}
+.bubble.hidden{opacity:0;}
+.bubble::after{
+  content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%);
+  border-left:7px solid transparent; border-right:7px solid transparent;
+  border-top:7px solid rgba(18,16,22,.94);
+}
 #doorLabel{
   opacity:0; transition:opacity .8s ease 1.2s;
   animation:doorPulse 2.6s ease-in-out infinite;
@@ -145,6 +157,41 @@ body.street #doorLabel{opacity:1;}
 .clist .k{font-family:'IBM Plex Mono',monospace; font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--fg-soft); width:82px; flex:none;}
 .clist a{color:var(--brass); text-decoration:none; font-size:.9rem;}
 .clist a:hover{text-decoration:underline;}
+.ytplayer{margin-bottom:16px;}
+.ytframe{position:relative; width:100%; aspect-ratio:16/9; background:#000; border:1px solid var(--panel-line);}
+.ytframe iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+.ytclose{margin-top:8px; background:none; border:1px solid var(--panel-line); color:var(--fg-soft); font-family:'IBM Plex Mono',monospace; font-size:.66rem; letter-spacing:.12em; padding:6px 12px; cursor:pointer;}
+.ytclose:hover{border-color:var(--brass); color:var(--brass);}
+.ytgrid{display:flex; flex-direction:column; gap:12px;}
+.yt{display:block; width:100%; padding:0; background:none; border:1px solid var(--panel-line); cursor:pointer; text-align:left; color:var(--fg); transition:border-color .2s; font-family:'IBM Plex Sans KR',sans-serif;}
+.yt:hover{border-color:var(--brass);}
+.yt img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; filter:saturate(.85) brightness(.92);}
+.yt:hover img{filter:none;}
+.yt-t{display:block; padding:9px 12px; font-size:.84rem;}
+.yt-empty{border-style:dashed; color:var(--fg-soft);}
+.yt-empty .yt-t{padding:20px 12px; text-align:center; font-size:.78rem;}
+.chanBtn{display:inline-block; margin-top:14px; border:1px solid var(--brass-dim); color:var(--brass); text-decoration:none; font-family:'IBM Plex Mono',monospace; font-size:.7rem; letter-spacing:.14em; padding:9px 16px;}
+.chanBtn:hover{background:var(--brass); color:#141118;}
+.sect{margin-top:24px;}
+.zlabel.near{background:rgba(201,164,92,.95); color:#141118; border-color:var(--brass);}
+#joy{
+  position:fixed; left:22px; bottom:26px; width:116px; height:116px; border-radius:50%;
+  background:rgba(14,14,20,.45); border:1px solid var(--panel-line); z-index:35;
+  display:none; touch-action:none;
+}
+#joyKnob{
+  position:absolute; left:50%; top:50%; width:46px; height:46px; border-radius:50%;
+  background:rgba(201,164,92,.35); border:1px solid var(--brass-dim);
+  transform:translate(-50%,-50%);
+}
+body.touch #joy{display:block;}
+#actBtn{
+  position:fixed; right:22px; bottom:34px; z-index:35; display:none;
+  background:rgba(201,164,92,.92); color:#141118; border:none; border-radius:99px;
+  padding:14px 22px; font-family:'IBM Plex Sans KR',sans-serif; font-size:.92rem; font-weight:500;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+body.touch #actBtn.show{display:block;}
 
 @media (max-width:640px){
   .panel{top:auto; right:10px; left:10px; bottom:10px; width:auto; max-height:60vh;}
@@ -162,7 +209,7 @@ body.street #doorLabel{opacity:1;}
 <div id="fade"></div>
 
 <header>
-  <div class="wordmark">Jazz Yourname<small>Research &middot; Music &middot; Open Late</small></div>
+  <div class="wordmark">Seokbeom's Private Club<small>Research &middot; Music &middot; Open Late</small></div>
   <nav>
     <button data-zone="music">무대</button>
     <button data-zone="research">서재</button>
@@ -178,67 +225,94 @@ body.street #doorLabel{opacity:1;}
 
 <div class="statusbar">
   <span id="modeText">OUTSIDE &middot; RAIN</span>
-  <span id="hintText">문을 눌러 입장</span>
+  <span id="hintText">WASD·화살표 이동 · 드래그 시점 · 문 앞에서 E</span>
 </div>
+
+<div id="joy"><div id="joyKnob"></div></div>
+<button id="actBtn"></button>
 
 <!-- ===== panels ===== -->
 <aside class="panel" id="panel-music">
   <button class="x" aria-label="닫기">&times;</button>
   <div class="eyebrow">On Stage</div>
   <h2>음악</h2>
-  <p class="note">&#x25B6; 는 페이지 안에서 실시간 합성되는 <b>데모 사운드</b>입니다. 실제 음원(mp3, Bandcamp / SoundCloud 임베드)으로 교체하세요. 재생 중에는 홀의 배경 재즈가 잦아듭니다.</p>
-  <div class="track" data-track="0">
-    <button class="play" aria-label="재생">&#x25B6;</button>
-    <div class="info"><div class="tt">Midnight Draft</div><div class="td">새벽 세 시의 스케치</div></div>
-    <span class="eq"><i></i><i></i><i></i></span><span class="dur">3:42</span>
+  <p class="note">썸네일을 누르면 이 자리에서 바로 재생됩니다. 재생하는 동안 홀의 배경 재즈는 알아서 조용해져요.</p>
+  <div class="ytplayer" id="ytPlayer" hidden>
+    <div class="ytframe" id="ytFrame"></div>
+    <button class="ytclose" id="ytClose">&#10005; 재생 닫기</button>
   </div>
-  <div class="track" data-track="1">
-    <button class="play" aria-label="재생">&#x25B6;</button>
-    <div class="info"><div class="tt">Rainy Interlude</div><div class="td">창밖의 소리로 만든 곡</div></div>
-    <span class="eq"><i></i><i></i><i></i></span><span class="dur">2:58</span>
+  <div class="ytgrid">
+    <button class="yt" data-vid="Pq6CskvQaXk">
+      <img src="https://i.ytimg.com/vi/Pq6CskvQaXk/hqdefault.jpg" alt="최신 영상 썸네일">
+      <span class="yt-t">최신 무대 영상 &mdash; [제목을 넣어주세요]</span>
+    </button>
+    <button class="yt yt-empty" data-vid="">
+      <span class="yt-t">+ 영상 추가 &mdash; data-vid에 유튜브 영상 ID를 넣어주세요</span>
+    </button>
+    <button class="yt yt-empty" data-vid="">
+      <span class="yt-t">+ 영상 추가 &mdash; data-vid에 유튜브 영상 ID를 넣어주세요</span>
+    </button>
   </div>
-  <div class="track" data-track="2">
-    <button class="play" aria-label="재생">&#x25B6;</button>
-    <div class="info"><div class="tt">Study in Blue</div><div class="td">화이트보드 앞에서 쓴 곡</div></div>
-    <span class="eq"><i></i><i></i><i></i></span><span class="dur">4:11</span>
-  </div>
-  <p class="note" style="margin-top:16px;">공연 일정, 앨범, 라이브 영상 링크를 이 아래에 추가할 수 있어요.</p>
+  <a class="chanBtn" href="https://youtube.com/@parkseokbeom" target="_blank" rel="noopener">&#x25B6; Park Seokbeom 채널 전체 보기</a>
+  <p class="note" style="margin-top:14px;">영상 추가법: 유튜브 주소에서 <b>v=</b> 뒤 11자리(예: Pq6CskvQaXk)를 <b>data-vid</b>에 넣고, 같은 ID로 <b>https://i.ytimg.com/vi/영상ID/hqdefault.jpg</b> 썸네일 이미지를 함께 넣으면 됩니다.</p>
 </aside>
 
 <aside class="panel" id="panel-research">
   <button class="x" aria-label="닫기">&times;</button>
   <div class="eyebrow">Reading Corner</div>
   <h2>연구</h2>
-  <div class="chips"><span>[키워드 1]</span><span>[키워드 2]</span><span>[키워드 3]</span></div>
+  <p>KAIST 문화기술대학원 <b>Music and Brain Lab</b> 박사과정. 음악을 들을 때의 뇌를 봅니다 &mdash; 그루브, 몰입, 그리고 친숙함.</p>
+  <div class="chips"><span>EEG</span><span>음악 인지</span><span>Groove</span><span>Musical Flow</span><span>Inter-brain Sync</span></div>
+
+  <div class="eyebrow sect">Publications</div>
   <article class="pub">
-    <span class="year">2026</span>
-    <h3>[가장 최근 논문 제목이 들어갈 자리입니다]</h3>
-    <p class="meta">[저자 목록] &middot; <em>[학회 / 저널]</em></p>
-    <p class="links"><a href="#">PDF</a><a href="#">DOI</a><a href="#">CODE</a></p>
+    <span class="year">2024 &middot; ISMIR</span>
+    <h3>Enhancing Predictive Models of Music Familiarity with EEG: Insights from Fans and Non-fans of K-pop Group NCT127</h3>
+    <p class="meta">25th International Society for Music Information Retrieval &middot; San Francisco</p>
   </article>
   <article class="pub">
-    <span class="year">2025</span>
-    <h3>[두 번째 논문 제목]</h3>
-    <p class="meta">[저자 목록] &middot; <em>[학회 / 저널]</em></p>
-    <p class="links"><a href="#">PDF</a><a href="#">DOI</a></p>
+    <span class="year">2020 &middot; Music Theory Forum</span>
+    <h3>A Review of Cognitive Studies of Groove</h3>
+    <p class="meta">음악이론포럼</p>
+  </article>
+
+  <div class="eyebrow sect">Conferences &amp; Presentations</div>
+  <article class="pub">
+    <span class="year">2024.03 &middot; Poster</span>
+    <h3>Correlations between Music Listening Experiences and EEG Responses</h3>
+    <p class="meta">67th Korea Society for Music Perception and Cognition &middot; Seoul</p>
   </article>
   <article class="pub">
-    <span class="year">2024</span>
-    <h3>[세 번째 논문 제목]</h3>
-    <p class="meta">[저자 목록] &middot; <em>[학회 / 저널]</em></p>
-    <p class="links"><a href="#">PDF</a></p>
+    <span class="year">2023.02 &middot; Poster</span>
+    <h3>Definition of Groove: A Survey Study</h3>
+    <p class="meta">66th Korea Society for Music Perception and Cognition</p>
   </article>
+  <article class="pub">
+    <span class="year">2021.11 &middot; Oral</span>
+    <h3>Musical Factors that Influence the Cognition of Groove</h3>
+    <p class="meta">65th Korea Society for Music Perception and Cognition</p>
+  </article>
+  <article class="pub">
+    <span class="year">2021.07 &middot; Oral</span>
+    <h3>Effects of Microtiming Deviations between Two Instruments on the Groove Experience</h3>
+    <p class="meta">16th International Conference on Music Perception and Cognition</p>
+  </article>
+  <article class="pub">
+    <span class="year">2020.11 &middot; Poster</span>
+    <h3>Influence of Microtiming Deviations between Rhythm Layers on the Groove Experience</h3>
+    <p class="meta">64th Korea Society for Music Perception and Cognition</p>
+  </article>
+  <p class="note" style="margin-top:14px;">PDF / DOI 링크는 준비되는 대로 각 항목에 붙일 수 있어요. 최신 연구가 생기면 이 목록 위에 추가하면 됩니다.</p>
 </aside>
 
 <aside class="panel" id="panel-about">
   <button class="x" aria-label="닫기">&times;</button>
   <div class="eyebrow">House Menu</div>
   <h2>바 메뉴</h2>
-  <p>어서 오세요. 이 가게의 주인 <b>[이름]</b>입니다. 낮에는 <b>[소속]</b>에서 <b>[연구 주제]</b>를 다루고, 밤에는 이 무대에서 음악을 만듭니다.</p>
-  <div class="menu-item"><span class="nm">에스프레소 <span class="ds">[한 줄 자기소개 — 진하고 짧게]</span></span><span class="pr">4.0</span></div>
-  <div class="menu-item"><span class="nm">시그니처 <span class="ds">[대표 연구를 한 문장으로]</span></span><span class="pr">7.0</span></div>
-  <div class="menu-item"><span class="nm">미드나이트 블렌드 <span class="ds">[음악 작업을 한 문장으로]</span></span><span class="pr">8.0</span></div>
-  <p class="note">대괄호 [ ] 안은 자리표시자입니다. 바깥 간판의 YOURNAME도 본인 이름으로 바꿔주세요.</p>
+  <p>어서 오세요, 이 가게의 주인 <b>박석범</b>입니다. 낮에는 KAIST 문화기술대학원 Music and Brain Lab에서 음악을 듣는 뇌를 연구하고, 밤에는 이 무대에서 기타를 잡고 노래합니다. 대전예술의전당과 함께한 라이브 랩 퍼포먼스 <em>X-Space</em>에서는 여러 사람의 뇌파 동기화를 실시간 비주얼로 옮기기도 했어요.</p>
+  <div class="menu-item"><span class="nm">에스프레소 <span class="ds">KAIST 문화기술대학원 &middot; Music and Brain Lab 박사과정</span></span><span class="pr">4.0</span></div>
+  <div class="menu-item"><span class="nm">시그니처 <span class="ds">EEG로 음악 감상의 경험을 측정합니다 &mdash; 그루브, 몰입, 친숙함</span></span><span class="pr">7.0</span></div>
+  <div class="menu-item"><span class="nm">미드나이트 블렌드 <span class="ds">블루스와 재즈 기타, 노래, 그리고 Ableton Live</span></span><span class="pr">8.0</span></div>
 </aside>
 
 <aside class="panel" id="panel-contact">
@@ -247,11 +321,11 @@ body.street #doorLabel{opacity:1;}
   <h2>게시판</h2>
   <p>협업, 공연, 연구 이야기 &mdash; 쪽지를 남겨주세요.</p>
   <ul class="clist">
-    <li><span class="k">Email</span><a href="mailto:hello@example.com">hello@example.com</a></li>
-    <li><span class="k">Scholar</span><a href="#">Google Scholar 프로필</a></li>
-    <li><span class="k">GitHub</span><a href="#">github.com/username</a></li>
-    <li><span class="k">Music</span><a href="#">Bandcamp / SoundCloud</a></li>
-    <li><span class="k">Social</span><a href="#">Instagram @username</a></li>
+    <li><span class="k">Email</span><a href="mailto:fpfmxh@kaist.ac.kr">fpfmxh@kaist.ac.kr</a></li>
+    <li><span class="k">YouTube</span><a href="https://youtube.com/@parkseokbeom" target="_blank" rel="noopener">@ParkSeokbeom</a></li>
+    <li><span class="k">Scholar</span><a href="#">Google Scholar 프로필 [링크 추가]</a></li>
+    <li><span class="k">GitHub</span><a href="#">github.com/[아이디]</a></li>
+    <li><span class="k">Social</span><a href="#">Instagram @[아이디]</a></li>
   </ul>
 </aside>
 
@@ -543,9 +617,9 @@ var doorGroup=new THREE.Group(); doorGroup.userData.action='enter'; doorPivot.ad
     g.fillStyle=vg; g.fillRect(0,0,w,h);
     g.fillStyle='#1A1E28'; g.textAlign='center';
     g.font='300 64px Georgia'; g.letterSpacing='18px';
-    g.fillText('J a z z', w/2, 128);
-    g.font='600 92px Arial Narrow, sans-serif'; g.letterSpacing='2px';
-    g.fillText('YOURNAME', w/2, 288);
+    g.fillText('L i v e', w/2, 128);
+    g.font='600 92px Arial Narrow, sans-serif'; g.letterSpacing='6px';
+    g.fillText('MUSIC', w/2, 288);
   });
   var litMat=new THREE.MeshBasicMaterial({map:signTex});
   var frameM=mat(0x14161C,{rough:0.5,metal:0.3});
@@ -640,6 +714,75 @@ var backRain=null, backRainData=[];
   box(0.4,2.1,0.2,0x2E1418, 1.52,0.02,0.02,g,{rough:1});
 })();
 
+/* ============================================================
+   CHARACTERS — low-poly noir figures (both are 석범)
+============================================================ */
+var musicianCh=null,bartenderCh=null;
+function makeCharacter(o){
+  o=o||{};
+  var skin=o.skin||0xD9B48F, hairC=o.hair||0x17141A;
+  var pants=o.pants||0x1C1E26, top=o.top||0x2A2D38, sleeves=o.sleeves||top;
+  var g=new THREE.Group();
+  var ch={g:g};
+  [-1,1].forEach(function(side,i){
+    var piv=new THREE.Group(); piv.position.set(side*0.075,0.46,0); g.add(piv);
+    cyl(0.048,0.055,0.46,pants,0,-0.23,0,piv,10,{rough:0.85});
+    box(0.1,0.05,0.15,0x0E0E12,0,-0.44,0.03,piv,{rough:0.6});
+    ch[i===0?'legL':'legR']=piv;
+  });
+  ch.torso=cyl(0.17,0.14,0.54,top,0,0.75,0,g,14,{rough:0.8});
+  cyl(0.05,0.06,0.09,skin,0,1.05,0,g,10);
+  [-1,1].forEach(function(side,i){
+    var piv=new THREE.Group(); piv.position.set(side*0.2,0.97,0); g.add(piv);
+    cyl(0.038,0.042,0.4,sleeves,0,-0.2,0,piv,10,{rough:0.8});
+    ball(0.042,skin,0,-0.42,0,piv);
+    ch[i===0?'armL':'armR']=piv;
+  });
+  if(o.coat){
+    cyl(0.19,0.155,0.34,top,0,0.4,0,g,14,{rough:0.85});
+    cyl(0.178,0.178,0.05,0x111218,0,0.57,0,g,14,{rough:0.8});
+  }
+  var head=new THREE.Group(); head.position.set(0,1.16,0); g.add(head);
+  ball(0.115,skin,0,0,0,head);
+  if(!o.hat){
+    var hr=ball(0.122,hairC,0,0.045,-0.015,head,{rough:0.9}); hr.scale.set(1,0.82,1);
+  } else {
+    var hc=(o.hat===true)?0x14131A:o.hat;
+    cyl(0.168,0.168,0.02,hc,0,0.1,0,head,16,{rough:0.7});
+    cyl(0.1,0.12,0.11,hc,0,0.17,0,head,14,{rough:0.7});
+    cyl(0.121,0.121,0.032,0x571B25,0,0.128,0,head,14,{rough:0.6});
+  }
+  ball(0.011,0x14121A,-0.045,0.01,0.104,head).castShadow=false;
+  ball(0.011,0x14121A,0.045,0.01,0.104,head).castShadow=false;
+  ch.head=head;
+  if(o.vest){
+    box(0.13,0.36,0.03,0xE8E2D4,0,0.8,0.155,g,{rough:0.9});
+    box(0.085,0.4,0.035,0x1B1D26,-0.075,0.77,0.15,g,{rough:0.75});
+    box(0.085,0.4,0.035,0x1B1D26,0.075,0.77,0.15,g,{rough:0.75});
+    var bt1=cone(0.03,0.05,0x571B25,-0.032,0.99,0.16,g,{rough:0.7}); bt1.rotation.z=-Math.PI/2;
+    var bt2=cone(0.03,0.05,0x571B25,0.032,0.99,0.16,g,{rough:0.7}); bt2.rotation.z=Math.PI/2;
+    ball(0.016,0x571B25,0,0.99,0.168,g,{rough:0.7});
+  }
+  g.scale.setScalar(1.35);
+  return ch;
+}
+function makeGuitar(){
+  var G=new THREE.Group();
+  var gLower=ball(0.27,0x9A6430,0,0,0,G,{rough:0.32}); gLower.scale.set(1,0.9,0.3);
+  var gUpper=ball(0.205,0x9A6430,0,0.29,0,G,{rough:0.32}); gUpper.scale.set(0.86,0.78,0.29);
+  var shl=cyl(0.056,0.056,0.02,0x120D09,0,0.12,0.075,G,16,{rough:0.8});
+  shl.rotation.x=Math.PI/2;
+  box(0.1,0.026,0.014,0x120D09,0,-0.1,0.076,G);
+  box(0.046,0.64,0.03,0x3A2417,0,0.6,0.055,G,{rough:0.5});
+  box(0.04,0.6,0.008,0x1B120C,0,0.6,0.074,G,{rough:0.6});
+  box(0.014,1.0,0.003,0xCFC3AA,0,0.4,0.08,G,{rough:0.4});
+  var hs=box(0.06,0.15,0.026,0x1B120C,0,0.97,0.045,G,{rough:0.5});
+  hs.rotation.x=-0.3;
+  ball(0.012,C.brass,-0.042,0.95,0.055,G,{rough:0.3,metal:0.7});
+  ball(0.012,C.brass,0.042,0.99,0.055,G,{rough:0.3,metal:0.7});
+  return G;
+}
+
 /* --- ZONE ① STAGE (back-left): velvet curtain, spotlight --- */
 var stageGroup=new THREE.Group(); stageGroup.userData.action='zone:music'; scene.add(stageGroup);
 (function(){
@@ -669,7 +812,7 @@ var stageGroup=new THREE.Group(); stageGroup.userData.action='zone:music'; scene
   var trim=new THREE.Mesh(new THREE.TorusGeometry(2.18,0.025,8,44),mat(C.brass,{rough:0.35,metal:0.7}));
   trim.rotation.x=Math.PI/2; trim.position.set(-3.5,0.28,-2.7); g.add(trim);
   /* upright piano — gloss black */
-  var p=new THREE.Group(); p.position.set(-4.55,0.28,-2.85); p.rotation.y=Math.PI/2-0.22; g.add(p);
+  var p=new THREE.Group(); p.position.set(-4.75,0.28,-3.05); p.rotation.y=Math.PI/2-0.22; g.add(p);
   box(1.6,1.3,0.62,0x101014,0,0.65,0,p,{rough:0.3});
   box(1.6,0.16,0.5,0x101014,0,0.62,0.5,p,{rough:0.3});
   box(1.44,0.05,0.34,C.cream,0,0.71,0.52,p,{rough:0.6});
@@ -679,33 +822,24 @@ var stageGroup=new THREE.Group(); stageGroup.userData.action='zone:music'; scene
   box(0.06,0.42,0.06,0x0E0B08,-0.27,0.25,0.94,p);
   box(0.06,0.42,0.06,0x0E0B08, 0.27,0.25,0.94,p);
   /* vocal mic — center stage */
-  cyl(0.018,0.018,1.3,0x2A2C33,-3.2,0.95,-2.25,g,10,{rough:0.35,metal:0.6});
-  cyl(0.22,0.26,0.04,0x14151C,-3.2,0.3,-2.25,g);
-  var mt=new THREE.Group(); mt.position.set(-3.2,1.6,-2.25); mt.rotation.z=-0.45; g.add(mt);
+  cyl(0.018,0.018,1.3,0x2A2C33,-3.05,0.95,-2.15,g,10,{rough:0.35,metal:0.6});
+  cyl(0.22,0.26,0.04,0x14151C,-3.05,0.3,-2.15,g);
+  var mt=new THREE.Group(); mt.position.set(-3.05,1.6,-2.15); mt.rotation.z=0.5; g.add(mt);
   cyl(0.014,0.014,0.34,0x2A2C33,0,0.12,0,mt,8,{rough:0.35,metal:0.6});
   ball(0.065,0x0E0E12,0,0.32,0,mt,{rough:0.5});
-  /* guitar on a stand — the leader's spot */
-  var gt=new THREE.Group(); gt.position.set(-3.9,0.28,-2.9); gt.rotation.y=0.6; g.add(gt);
-  var leg1=cyl(0.013,0.013,0.4,0x1A1C22,-0.11,0.18,0.06,gt,8,{rough:0.4,metal:0.5});
-  leg1.rotation.z=0.5; leg1.rotation.x=-0.25;
-  var leg2=cyl(0.013,0.013,0.4,0x1A1C22,0.11,0.18,0.06,gt,8,{rough:0.4,metal:0.5});
-  leg2.rotation.z=-0.5; leg2.rotation.x=-0.25;
-  var leg3=cyl(0.013,0.013,0.44,0x1A1C22,0,0.2,-0.12,gt,8,{rough:0.4,metal:0.5});
-  leg3.rotation.x=0.5;
-  box(0.2,0.018,0.04,0x1A1C22,0,0.3,0.1,gt);
-  var gtb=new THREE.Group(); gtb.position.set(0,0.5,0.03); gtb.rotation.x=-0.16; gt.add(gtb);
-  var gLower=ball(0.27,0x9A6430,0,0,0,gtb,{rough:0.32}); gLower.scale.set(1,0.9,0.3);
-  var gUpper=ball(0.205,0x9A6430,0,0.29,0,gtb,{rough:0.32}); gUpper.scale.set(0.86,0.78,0.29);
-  var shl=cyl(0.056,0.056,0.02,0x120D09,0,0.12,0.075,gtb,16,{rough:0.8});
-  shl.rotation.x=Math.PI/2;
-  box(0.1,0.026,0.014,0x120D09,0,-0.1,0.076,gtb);
-  box(0.046,0.64,0.03,0x3A2417,0,0.6,0.055,gtb,{rough:0.5});
-  box(0.04,0.6,0.008,0x1B120C,0,0.6,0.074,gtb,{rough:0.6});
-  box(0.014,1.0,0.003,0xCFC3AA,0,0.4,0.08,gtb,{rough:0.4});
-  var hs=box(0.06,0.15,0.026,0x1B120C,0,0.97,0.045,gtb,{rough:0.5});
-  hs.rotation.x=-0.3;
-  ball(0.012,C.brass,-0.042,0.95,0.055,gtb,{rough:0.3,metal:0.7});
-  ball(0.012,C.brass,0.042,0.99,0.055,gtb,{rough:0.3,metal:0.7});
+  /* the musician — 석범, guitar in hand at the mic */
+  musicianCh=makeCharacter({top:0x262A3A,pants:0x15161C});
+  musicianCh.g.position.set(-3.28,0.28,-2.55);
+  musicianCh.g.rotation.y=0.45;
+  musicianCh.g.userData.action='npc:musician';
+  g.add(musicianCh.g);
+  musicianCh.armR.rotation.x=-1.1; musicianCh.armR.rotation.z=-0.55;
+  musicianCh.armL.rotation.x=-0.7; musicianCh.armL.rotation.z=0.3;
+  var gtr=makeGuitar();
+  gtr.scale.setScalar(0.72);
+  gtr.position.set(0.03,0.68,0.21);
+  gtr.rotation.set(0.12,0.18,-0.9);
+  musicianCh.g.add(gtr);
   /* record player on side table */
   var rp=new THREE.Group(); rp.position.set(-1.35,0,-3.9); g.add(rp);
   box(0.78,0.55,0.55,C.counter,0,0.275,0,rp,{rough:0.6});
@@ -713,18 +847,18 @@ var stageGroup=new THREE.Group(); stageGroup.userData.action='zone:music'; scene
   window.__disc=cyl(0.23,0.23,0.03,0x0C0C10,-0.08,0.675,0,rp,26,{rough:0.5});
   cyl(0.07,0.07,0.035,C.brass,-0.08,0.68,0,rp,14,{rough:0.4,metal:0.6});
   /* spotlight fixture + volumetric cone + light */
-  cyl(0.09,0.12,0.2,0x0E0F14,-3.35,WALL_H-0.14,-1.05,g,12);
+  cyl(0.09,0.12,0.2,0x0E0F14,-3.2,WALL_H-0.14,-1.05,g,12);
   var coneGeo=new THREE.ConeGeometry(1.5,3.1,20,1,true);
   coneGeo.translate(0,-1.55,0);
   var haze=new THREE.Mesh(coneGeo,new THREE.MeshBasicMaterial({
     color:0xFFC98A,transparent:true,opacity:0.055,side:THREE.DoubleSide,
     depthWrite:false,blending:THREE.AdditiveBlending
   }));
-  haze.position.set(-3.35,WALL_H-0.22,-1.05);
+  haze.position.set(-3.2,WALL_H-0.22,-1.05);
   haze.rotation.x=0.5; haze.rotation.z=-0.04; g.add(haze);
   var spot=new THREE.SpotLight(0xFFC372,1.6,12,0.44,0.55,1.7);
-  spot.position.set(-3.35,WALL_H-0.2,-1.0);
-  spot.target.position.set(-3.5,0.6,-2.5);
+  spot.position.set(-3.2,WALL_H-0.2,-1.0);
+  spot.target.position.set(-3.2,0.9,-2.45);
   spot.castShadow=true; spot.shadow.mapSize.set(1024,1024); spot.shadow.bias=-0.002;
   scene.add(spot); scene.add(spot.target);
 })();
@@ -780,7 +914,7 @@ var nookGroup=new THREE.Group(); nookGroup.userData.action='zone:research'; scen
 var barGroup=new THREE.Group(); barGroup.userData.action='zone:about'; scene.add(barGroup);
 (function(){
   var g=barGroup;
-  var base=new THREE.Group(); base.position.set(4.7,0,1.3); base.rotation.y=-Math.PI/2; g.add(base);
+  var base=new THREE.Group(); base.position.set(4.5,0,1.3); base.rotation.y=-Math.PI/2; g.add(base);
   box(3.2,1.02,0.8,C.counter,0,0.51,0,base,{rough:0.7});
   box(3.44,0.09,0.98,C.counterTop,0,1.06,0,base,{rough:0.22});
   box(3.2,0.3,0.05,C.wainscot,0,0.55,0.41,base,{rough:0.75});
@@ -827,11 +961,21 @@ var barGroup=new THREE.Group(); barGroup.userData.action='zone:about'; scene.add
   mb.position.set(HALF_W-0.1,2.85,1.3); g.add(mb);
   /* leather-top stools */
   [0.3,1.3,2.3].forEach(function(z){
-    var st2=new THREE.Group(); st2.position.set(3.55,0,z); g.add(st2);
+    var st2=new THREE.Group(); st2.position.set(3.62,0,z); g.add(st2);
     cyl(0.22,0.22,0.09,C.leather,0,0.66,0,st2,16,{rough:0.5});
     cyl(0.035,0.035,0.62,0x17110B,0,0.31,0,st2,10);
     cyl(0.15,0.19,0.04,0x17110B,0,0.02,0,st2,14);
   });
+  /* the bartender — 석범, polishing a glass behind the counter */
+  bartenderCh=makeCharacter({vest:true,top:0x23252E,sleeves:0xE8E2D4,pants:0x15161C});
+  bartenderCh.g.position.set(5.15,0,0.9);
+  bartenderCh.g.rotation.y=-Math.PI/2;
+  bartenderCh.g.userData.action='npc:bartender';
+  g.add(bartenderCh.g);
+  bartenderCh.armR.rotation.x=-1.0; bartenderCh.armR.rotation.z=-0.3;
+  bartenderCh.armL.rotation.x=-0.85; bartenderCh.armL.rotation.z=0.35;
+  cyl(0.034,0.027,0.08,0xC8D2DC,0,-0.45,0.03,bartenderCh.armR,10,{transparent:true,opacity:0.45,rough:0.12});
+  box(0.07,0.05,0.05,0xD8D2C2,0,-0.44,0.02,bartenderCh.armL,{rough:1});
 })();
 
 /* --- ZONE ④ NOTES BOARD (left wall) with picture light --- */
@@ -896,7 +1040,7 @@ var candles=[];
 var catGroup=new THREE.Group(); catGroup.userData.action='cat'; scene.add(catGroup);
 var catTail=null, catBodyMesh=null, catAnim={hop:0};
 (function(){
-  var cat=new THREE.Group(); cat.position.set(4.7,1.105,2.85); cat.rotation.y=-2.2; catGroup.add(cat);
+  var cat=new THREE.Group(); cat.position.set(4.5,1.105,2.85); cat.rotation.y=-2.2; catGroup.add(cat);
   window.__cat=cat;
   catBodyMesh=ball(0.17,C.cat,0,0.16,0,cat,{rough:0.85}); catBodyMesh.scale.set(1,1.1,0.9);
   ball(0.125,C.cat,0,0.38,0.04,cat,{rough:0.85});
@@ -936,7 +1080,7 @@ var dust=[];
 ============================================================ */
 var ctx=null,master=null,ambBus=null,jazzLP=null,delayBus=null,noiseBuf=null;
 var rainNodes=null, crackle={src:null,gain:null,pops:null};
-var state={mode:'street',muted:false,entered:false,audioOn:false};
+var state={mode:'walk',inside:false,muted:false,entered:false,audioOn:false};
 
 function ensureAudio(){
   if(!ctx){
@@ -1104,50 +1248,28 @@ function jazzOpenUp(){
   ambBus.gain.setTargetAtTime(0.9,ctx.currentTime,0.7);
 }
 
-/* demo tracks (duck the house band) */
-var TRACKS=[
-  {step:3000,style:'pad',wave:'sine',prog:[[48,55,60,63,67],[44,51,58,60,63],[51,55,58,62,65],[46,53,58,60,65]]},
-  {step:2600,style:'pad',wave:'triangle',prog:[[45,52,57,60,64],[41,48,55,60,64],[43,50,57,59,62],[45,52,57,60,64]]},
-  {step:300,style:'arp',wave:'triangle',chordEvery:8,prog:[[48,55,58,63,67],[46,53,58,62,65],[44,51,55,60,63],[43,50,55,58,62]]}
-];
-var cur={i:-1,timer:null,step:0};
+/* YouTube embeds (duck the house band while a video plays) */
 function duck(on){ if(ambBus) ambBus.gain.setTargetAtTime(on?0.1:0.9,ctx.currentTime,0.5); }
-function stopTrack(){
-  if(cur.timer) clearInterval(cur.timer);
-  cur.timer=null; cur.step=0;
-  if(cur.i>=0){
-    var row=$('.track[data-track="'+cur.i+'"]');
-    if(row){row.classList.remove('playing'); row.querySelector('.play').innerHTML='&#x25B6;';}
-    duck(false);
-  }
-  cur.i=-1;
+var ytPlayer=$('#ytPlayer'), ytFrame=$('#ytFrame');
+function ytOpen(vid){
+  if(!vid) return;
+  ensureAudio();
+  ytFrame.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+vid+'?autoplay=1" title="YouTube video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+  ytPlayer.hidden=false;
+  duck(true);
 }
-function playTrack(i){
-  if(cur.i===i){stopTrack(); return;}
-  stopTrack();
-  if(!ensureAudio()) return;
-  cur.i=i; duck(true);
-  var def=TRACKS[i],row=$('.track[data-track="'+i+'"]');
-  row.classList.add('playing'); row.querySelector('.play').innerHTML='&#x25A0;';
-  var stepFn=function(){
-    var t=ctx.currentTime+0.03,chord;
-    if(def.style==='pad'){
-      chord=def.prog[cur.step%def.prog.length];
-      chord.forEach(function(m,k){tone(m,t+k*0.035,{dur:def.step/1000*1.7,type:def.wave,gain:0.055,cut:1050,send:0.6,bus:master,atk:0.05});});
-    }else{
-      var ci=Math.floor(cur.step/def.chordEvery)%def.prog.length;
-      chord=def.prog[ci];
-      tone(chord[cur.step%chord.length]+12,t,{dur:0.55,type:def.wave,gain:0.1,cut:2100,send:0.7,bus:master});
-    }
-    cur.step++;
-  };
-  stepFn(); cur.timer=setInterval(stepFn,def.step);
+function ytClose(){
+  ytFrame.innerHTML='';
+  ytPlayer.hidden=true;
+  if(ctx) duck(false);
 }
-$$('.track .play').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    playTrack(parseInt(btn.closest('.track').getAttribute('data-track'),10));
+$$('.yt').forEach(function(b){
+  b.addEventListener('click',function(){
+    var v=b.getAttribute('data-vid');
+    if(v) ytOpen(v);
   });
 });
+$('#ytClose').addEventListener('click',ytClose);
 
 /* first user gesture: rain + the band heard faintly through the door */
 function firstGesture(){
@@ -1164,7 +1286,7 @@ window.addEventListener('pointerdown',firstGesture,{once:false});
 var ZONES={
   music:{label:'무대','en':'Music',anchor:new THREE.Vector3(-3.5,2.35,-2.6),cam:new THREE.Vector3(-0.7,1.85,1.3),tgt:new THREE.Vector3(-3.7,1.05,-2.9),name:'STAGE'},
   research:{label:'서재','en':'Research',anchor:new THREE.Vector3(3.5,2.5,-3.1),cam:new THREE.Vector3(0.7,1.75,0.3),tgt:new THREE.Vector3(3.8,1.15,-3.2),name:'READING CORNER'},
-  about:{label:'바','en':'Menu',anchor:new THREE.Vector3(4.7,2.45,1.3),cam:new THREE.Vector3(1.1,1.8,2.1),tgt:new THREE.Vector3(5.2,1.35,1.3),name:'BAR'},
+  about:{label:'바','en':'Menu',anchor:new THREE.Vector3(4.55,2.45,1.3),cam:new THREE.Vector3(1.1,1.8,2.1),tgt:new THREE.Vector3(5.2,1.35,1.3),name:'BAR'},
   contact:{label:'게시판','en':'Contact',anchor:new THREE.Vector3(-5.6,2.4,1.6),cam:new THREE.Vector3(-2.3,1.75,3.0),tgt:new THREE.Vector3(-5.9,1.7,1.6),name:'NOTES'}
 };
 var labelsEl=$('#labels');
@@ -1183,49 +1305,203 @@ doorLabel.addEventListener('click',function(){enterBar(null);});
 labelsEl.appendChild(doorLabel);
 var doorAnchor=new THREE.Vector3(DOOR_X,2.05,FRONT_Z+0.12);
 
-/* interior orbit: pivot inside the room */
-var orbit={theta:0.3,phi:0.2,radius:4.1,target:new THREE.Vector3(0,1.35,-0.35)};
-function orbitPos(){
-  var t=orbit.theta,p=orbit.phi,r=orbit.radius;
-  var v=new THREE.Vector3(
-    orbit.target.x+r*Math.cos(p)*Math.sin(t),
-    orbit.target.y+r*Math.sin(p),
-    orbit.target.z+r*Math.cos(p)*Math.cos(t)
-  );
-  /* keep the camera inside the room */
-  v.x=THREE.MathUtils.clamp(v.x,-5.3,5.3);
-  v.y=THREE.MathUtils.clamp(v.y,0.7,3.0);
-  v.z=THREE.MathUtils.clamp(v.z,-4.0,4.15);
-  return v;
-}
-var tween=null;
-function ease(t){return t*t*(3-2*t);}
-function flyTo(pos,tgt,dur,done){
-  tween={p0:camera.position.clone(),p1:pos.clone(),t0:curTarget.clone(),t1:tgt.clone(),t:0,dur:dur,done:done};
-}
-var modeText=$('#modeText'),hintText=$('#hintText'),backBtn=$('#backBtn');
-function setStatus(m,h){modeText.textContent=m; hintText.textContent=h;}
-
-function goZone(key){
-  if(!state.entered){enterBar(function(){goZone(key);}); return;}
-  if(state.mode==='zone'&&state.zone===key) return;
-  closePanel();
-  state.mode='zone'; state.zone=key;
-  backBtn.classList.add('show');
-  setStatus(ZONES[key].name,'');
-  flyTo(ZONES[key].cam,ZONES[key].tgt,reduced?0.05:1.2,null);
-  setTimeout(function(){openPanel(key);},reduced?50:450);
-}
-function backToOrbit(){
-  closePanel();
-  state.mode='fly';
-  backBtn.classList.remove('show');
-  flyTo(orbitPos(),orbit.target,reduced?0.05:1.0,function(){
-    state.mode='orbit';
-    setStatus('INSIDE','드래그 회전 · 휠/핀치 줌 · 구역 클릭');
+/* NPC dialog bubbles */
+var bubble=document.createElement('div');
+bubble.className='bubble hidden';
+labelsEl.appendChild(bubble);
+var bubbleState={anchor:new THREE.Vector3(),until:0};
+var NPC_LINES={
+  musician:[
+    '안녕하세요, 오늘 무대를 맡은 박석범입니다.',
+    '신청곡 있으세요? 블루스도, 재즈도 좋아요.',
+    '연구가 막히는 날엔 여기서 기타를 잡습니다.',
+    '무대 영상이 궁금하면 Music 메뉴를 열어보세요.'
+  ],
+  bartender:[
+    '어서 오세요. 젖은 코트는 문 옆에 걸어두시면 됩니다.',
+    '오늘의 추천은 미드나이트 블렌드 — 밤샘 연구자를 위한 잔이에요.',
+    '메뉴가 궁금하시면 바 카운터를 눌러보세요.',
+    '사장님이요? 지금 무대에 서 계십니다. 저요? ...저도 사장님입니다만.'
+  ]
+};
+var npcIdx={musician:0,bartender:0};
+var NPC_ANCHOR={
+  musician:new THREE.Vector3(-3.28,2.35,-2.55),
+  bartender:new THREE.Vector3(5.15,2.05,0.9)
+};
+function guitarLick(){
+  if(!ensureAudio()) return;
+  var t=ctx.currentTime+0.05, notes=[64,67,69,72,74,72];
+  notes.forEach(function(n,i){
+    tone(n,t+i*SW*0.5,{dur:0.5,type:'triangle',gain:0.07,cut:2400,send:0.5,atk:0.008});
   });
 }
-backBtn.addEventListener('click',backToOrbit);
+function npcTalk(key){
+  var lines=NPC_LINES[key]; if(!lines) return;
+  bubble.textContent=lines[npcIdx[key]%lines.length];
+  npcIdx[key]++;
+  bubbleState.anchor.copy(NPC_ANCHOR[key]);
+  bubbleState.until=performance.now()+3600;
+  bubble.classList.remove('hidden');
+  if(key==='musician') guitarLick();
+}
+
+/* ============================================================
+   GUEST AVATAR + FOLLOW CAMERA + INPUT
+============================================================ */
+var avatar={
+  ch:makeCharacter({top:0x2E3138,pants:0x1A1C22,coat:true,hat:true}),
+  pos:new THREE.Vector3(3.6,0,8.6),
+  heading:Math.atan2(DOOR_X-3.6,FRONT_Z-8.6),
+  speed:0, phase:0
+};
+avatar.ch.g.position.copy(avatar.pos);
+avatar.ch.g.rotation.y=avatar.heading;
+scene.add(avatar.ch.g);
+
+var orbit={theta:0.45,phi:0.24,radius:4.6};
+function camPos(target){
+  var t=orbit.theta,p=orbit.phi,r=orbit.radius;
+  var v=new THREE.Vector3(
+    target.x+r*Math.cos(p)*Math.sin(t),
+    target.y+r*Math.sin(p),
+    target.z+r*Math.cos(p)*Math.cos(t)
+  );
+  if(state.mode!=='enter'){
+    if(state.inside){
+      v.x=THREE.MathUtils.clamp(v.x,-5.3,5.3);
+      v.y=THREE.MathUtils.clamp(v.y,0.6,3.0);
+      v.z=THREE.MathUtils.clamp(v.z,-4.0,4.15);
+    }else{
+      v.x=THREE.MathUtils.clamp(v.x,-8,8);
+      v.y=THREE.MathUtils.clamp(v.y,0.5,4.6);
+      v.z=THREE.MathUtils.clamp(v.z,4.72,11.6);
+    }
+  }
+  return v;
+}
+function rClamp(v){return THREE.MathUtils.clamp(v,state.inside?2.2:2.6,state.inside?4.4:6.5);}
+function ease(t){return t*t*(3-2*t);}
+function lerpAng(a,b,k){var d=Math.atan2(Math.sin(b-a),Math.cos(b-a));return a+d*k;}
+var modeText=$('#modeText'),hintText=$('#hintText');
+function setStatus(m,h){modeText.textContent=m; hintText.textContent=h;}
+
+/* keyboard */
+var keys={};
+function normKey(e){
+  var k=e.key.toLowerCase();
+  if(k==='arrowup')k='w'; if(k==='arrowdown')k='s';
+  if(k==='arrowleft')k='a'; if(k==='arrowright')k='d';
+  return k;
+}
+document.addEventListener('keydown',function(e){
+  var k=normKey(e); keys[k]=true;
+  if(k==='e'&&curInteract&&state.mode==='walk') curInteract.act();
+});
+document.addEventListener('keyup',function(e){ keys[normKey(e)]=false; });
+
+/* virtual joystick (touch) */
+var joyVec={x:0,y:0};
+(function(){
+  if(('ontouchstart' in window)||navigator.maxTouchPoints>0) document.body.classList.add('touch');
+  var joy=$('#joy'),knob=$('#joyKnob');
+  if(!joy) return;
+  var jid=null;
+  function setKnob(dx,dy){knob.style.transform='translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px))';}
+  joy.addEventListener('pointerdown',function(e){
+    firstGesture();
+    jid=e.pointerId; joy.setPointerCapture(jid); e.stopPropagation();
+  });
+  joy.addEventListener('pointermove',function(e){
+    if(e.pointerId!==jid) return;
+    var r=joy.getBoundingClientRect();
+    var dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+    var d=Math.hypot(dx,dy), m=Math.min(d,42), s=d>0?m/d:0;
+    dx*=s; dy*=s; setKnob(dx,dy);
+    joyVec.x=dx/42; joyVec.y=dy/42;
+  });
+  function jend(e){
+    if(e.pointerId!==jid) return;
+    jid=null; joyVec.x=0; joyVec.y=0; setKnob(0,0);
+  }
+  joy.addEventListener('pointerup',jend);
+  joy.addEventListener('pointercancel',jend);
+})();
+
+/* collision: room bounds + furniture */
+var IN_CIRC=[[-3.5,-2.7,2.3],[-0.7,0.6,0.75],[1.6,-1.1,0.75],[-1.35,-3.9,0.6],[2.3,-3.25,0.5],[3.4,-2.3,0.8],[5.1,-2.6,0.35],[-1.5,1.0,0.3],[0.05,1.4,0.3],[2.4,-0.6,0.3],[0.9,-1.9,0.3],[3.62,0.3,0.3],[3.62,1.3,0.3],[3.62,2.3,0.3]];
+var IN_RECT=[[4.05,6.2,-0.4,3.0],[2.6,5.2,-4.5,-3.7]];
+var OUT_CIRC=[[5.2,5.35,0.55],[-5.6,4.85,0.3]];
+var AV_R=0.24;
+function collide(np){
+  if(state.mode!=='enter'){
+    if(state.inside){
+      np.x=THREE.MathUtils.clamp(np.x,-5.45,5.45);
+      np.z=THREE.MathUtils.clamp(np.z,-4.02,4.1);
+    }else{
+      np.x=THREE.MathUtils.clamp(np.x,-7.4,7.4);
+      np.z=THREE.MathUtils.clamp(np.z,4.78,11.0);
+    }
+  }
+  var cs=state.inside?IN_CIRC:OUT_CIRC;
+  for(var i=0;i<cs.length;i++){
+    var c=cs[i],dx=np.x-c[0],dz=np.z-c[1],d=Math.hypot(dx,dz),min=c[2]+AV_R;
+    if(d<min){ if(d<0.001){np.x=c[0]+min;} else {np.x=c[0]+dx/d*min; np.z=c[1]+dz/d*min;} }
+  }
+  if(state.inside){
+    for(var j=0;j<IN_RECT.length;j++){
+      var r2=IN_RECT[j];
+      if(np.x>r2[0]-AV_R&&np.x<r2[1]+AV_R&&np.z>r2[2]-AV_R&&np.z<r2[3]+AV_R){
+        var pl=np.x-(r2[0]-AV_R), pr=(r2[1]+AV_R)-np.x, pn=np.z-(r2[2]-AV_R), pf=(r2[3]+AV_R)-np.z;
+        var mn=Math.min(pl,pr,pn,pf);
+        if(mn===pl)np.x=r2[0]-AV_R; else if(mn===pr)np.x=r2[1]+AV_R;
+        else if(mn===pn)np.z=r2[2]-AV_R; else np.z=r2[3]+AV_R;
+      }
+    }
+  }
+  return np;
+}
+
+/* proximity interactions (E key / tap button) */
+var curInteract=null, actBtn=$('#actBtn');
+var INTERACTS=[
+  {id:'door',tier:1,label:'문을 밀고 들어가기',x:DOOR_X,z:4.75,r:1.7,when:'out',act:function(){enterBar(null);}},
+  {id:'musician',tier:1,label:'뮤지션에게 말 걸기',x:-3.28,z:-2.55,r:2.0,when:'in',act:function(){npcTalk('musician');}},
+  {id:'bartender',tier:1,label:'바텐더에게 말 걸기',x:4.35,z:0.9,r:1.7,when:'in',act:function(){npcTalk('bartender');}},
+  {id:'cat',tier:1,label:'고양이 쓰다듬기',x:4.2,z:2.85,r:1.4,when:'in',act:meow},
+  {id:'music',tier:2,label:'무대 살펴보기',x:-2.7,z:-1.7,r:2.1,when:'in',act:function(){openPanel('music');}},
+  {id:'research',tier:2,label:'서재 살펴보기',x:3.3,z:-2.9,r:1.9,when:'in',act:function(){openPanel('research');}},
+  {id:'about',tier:2,label:'바 메뉴 보기',x:3.9,z:1.3,r:1.6,when:'in',act:function(){openPanel('about');}},
+  {id:'contact',tier:2,label:'게시판 보기',x:-5.2,z:1.6,r:1.9,when:'in',act:function(){openPanel('contact');}}
+];
+function scanInteract(){
+  var best=null,bestD=1e9,bestTier=9;
+  for(var i=0;i<INTERACTS.length;i++){
+    var it=INTERACTS[i];
+    if((it.when==='in')!==state.inside) continue;
+    var d=Math.hypot(avatar.pos.x-it.x,avatar.pos.z-it.z);
+    if(d>it.r) continue;
+    if(it.tier<bestTier||(it.tier===bestTier&&d<bestD)){best=it;bestD=d;bestTier=it.tier;}
+  }
+  if(best!==curInteract){
+    curInteract=best;
+    if(actBtn){
+      if(best){actBtn.textContent=best.label;actBtn.classList.add('show');}
+      else actBtn.classList.remove('show');
+    }
+  }
+  Object.keys(ZONES).forEach(function(k){
+    ZONES[k].el.classList.toggle('near',!!(best&&best.id===k));
+  });
+  hintText.textContent = best?('E — '+best.label):(state.inside?'WASD·화살표 이동 · 드래그 시점 회전':'WASD·화살표 이동 · 문 앞으로');
+}
+if(actBtn) actBtn.addEventListener('click',function(){ if(curInteract&&state.mode==='walk') curInteract.act(); });
+
+function goZone(key){
+  if(!state.inside){enterBar(function(){openPanel(key);}); return;}
+  openPanel(key);
+}
+var enterScript=null;
 
 /* ============================================================
    PANELS
@@ -1239,26 +1515,25 @@ function openPanel(name){
 function closePanel(){
   if(!openId) return;
   $('#panel-'+openId).classList.remove('open');
-  if(openId==='music') stopTrack();
+  if(openId==='music') ytClose();
   openId=null;
 }
 $$('.panel .x').forEach(function(x){
-  x.addEventListener('click',function(){closePanel(); if(state.mode==='zone') backToOrbit();});
+  x.addEventListener('click',function(){closePanel();});
 });
 $$('nav [data-zone]').forEach(function(b){
   b.addEventListener('click',function(){goZone(b.getAttribute('data-zone'));});
 });
 document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){ if(state.mode==='zone') backToOrbit(); else closePanel(); }
-  if(e.key==='Enter'&&state.mode==='street') enterBar(null);
+  if(e.key==='Escape') closePanel();
+  if(e.key==='Enter'&&!state.inside&&state.mode==='walk'&&curInteract&&curInteract.id==='door') enterBar(null);
 });
 
 /* ============================================================
-   POINTER — street look / interior orbit / raycast
+   POINTER — camera drag, pinch zoom, click raycast
 ============================================================ */
 var ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 var pointers={},dragInfo=null,pinch0=0;
-var streetLook={yaw:0,pitch:0};
 var clickables=[doorGroup,stageGroup,nookGroup,barGroup,boardGroup,catGroup];
 
 function findAction(o){
@@ -1283,47 +1558,40 @@ renderer.domElement.addEventListener('pointerdown',function(e){
 renderer.domElement.addEventListener('pointermove',function(e){
   if(pointers[e.pointerId]){pointers[e.pointerId].x=e.clientX; pointers[e.pointerId].y=e.clientY;}
   var ids=Object.keys(pointers);
-  if(ids.length===2&&state.mode==='orbit'){
+  if(ids.length===2&&state.mode==='walk'){
     var a=pointers[ids[0]],b=pointers[ids[1]];
     var d=Math.hypot(a.x-b.x,a.y-b.y);
-    orbit.radius=THREE.MathUtils.clamp(orbit.radius*(pinch0/d),2.9,4.4);
+    orbit.radius=rClamp(orbit.radius*(pinch0/d));
     pinch0=d; return;
   }
   if(dragInfo&&ids.length===1){
     var dx=e.clientX-dragInfo.x,dy=e.clientY-dragInfo.y;
     if(Math.abs(dx)+Math.abs(dy)>4) dragInfo.moved=true;
-    if(dragInfo.moved){
-      if(state.mode==='orbit'){
-        orbit.theta-=dx*0.0045;
-        orbit.phi=THREE.MathUtils.clamp(orbit.phi+dy*0.0038,0.07,0.42);
-      }else if(state.mode==='street'){
-        streetLook.yaw=THREE.MathUtils.clamp(streetLook.yaw-dx*0.002,-0.35,0.35);
-        streetLook.pitch=THREE.MathUtils.clamp(streetLook.pitch+dy*0.0016,-0.16,0.2);
-      }
+    if(dragInfo.moved&&state.mode==='walk'){
+      orbit.theta-=dx*0.0045;
+      orbit.phi=THREE.MathUtils.clamp(orbit.phi+dy*0.0038,0.07,state.inside?0.42:0.6);
     }
     dragInfo.x=e.clientX; dragInfo.y=e.clientY;
-  } else if(ids.length===0&&e.pointerType==='mouse'){
+  } else if(ids.length===0&&e.pointerType==='mouse'&&state.mode==='walk'){
     var act=raycastAt(e.clientX,e.clientY);
-    if(state.mode==='street'){
-      renderer.domElement.style.cursor=(act==='enter')?'pointer':'default';
-      doorLabel.classList.toggle('hot',act==='enter');
-    }else if(state.mode==='orbit'){
-      renderer.domElement.style.cursor=act?'pointer':'grab';
-      Object.keys(ZONES).forEach(function(k){
-        ZONES[k].el.classList.toggle('hot',act==='zone:'+k);
-      });
-    }
+    renderer.domElement.style.cursor=act?'pointer':'grab';
+    if(!state.inside) doorLabel.classList.toggle('hot',act==='enter');
+    Object.keys(ZONES).forEach(function(k){
+      ZONES[k].el.classList.toggle('hot',act==='zone:'+k);
+    });
   }
 });
 function pointerEnd(e){
   var wasDrag=dragInfo&&dragInfo.moved;
   delete pointers[e.pointerId];
   if(Object.keys(pointers).length===0){
-    if(!wasDrag){
+    if(!wasDrag&&state.mode==='walk'){
       var act=raycastAt(e.clientX,e.clientY);
-      if(state.mode==='street'&&act==='enter') enterBar(null);
-      else if(state.mode==='orbit'||state.mode==='zone'){
+      if(!state.inside){
+        if(act==='enter') enterBar(null);
+      }else{
         if(act==='cat') meow();
+        else if(act&&act.indexOf('npc:')===0) npcTalk(act.slice(4));
         else if(act&&act.indexOf('zone:')===0) goZone(act.slice(5));
       }
     }
@@ -1333,12 +1601,12 @@ function pointerEnd(e){
 renderer.domElement.addEventListener('pointerup',pointerEnd);
 renderer.domElement.addEventListener('pointercancel',pointerEnd);
 renderer.domElement.addEventListener('wheel',function(e){
-  if(state.mode!=='orbit') return;
-  orbit.radius=THREE.MathUtils.clamp(orbit.radius+e.deltaY*0.003,2.9,4.4);
+  if(state.mode!=='walk') return;
+  orbit.radius=rClamp(orbit.radius+e.deltaY*0.003);
 },{passive:true});
 
 /* ============================================================
-   ENTRY — push the door, step inside
+   ENTRY — walk to the door, push it, step inside
 ============================================================ */
 var muteBtn=$('#muteBtn');
 muteBtn.addEventListener('click',function(e){
@@ -1350,27 +1618,15 @@ muteBtn.addEventListener('click',function(e){
 
 var doorAnim=null;
 function enterBar(after){
-  if(state.entered){if(after)after(); return;}
-  state.entered=true; state.mode='enter';
+  if(state.inside){if(after)after(); return;}
+  if(state.mode==='enter') return;
+  state.mode='enter'; state.entered=true;
   firstGesture();
   document.body.classList.remove('street');
   doorLabel.classList.add('hidden');
-  doorBell();
-  setStatus('ENTERING','딸랑 —');
-  doorAnim={t:0,dir:1};
-  /* step under the awning, then through the middle of the doorway */
-  flyTo(new THREE.Vector3(DOOR_X,1.62,FRONT_Z+1.5),new THREE.Vector3(DOOR_X-0.15,1.45,FRONT_Z-1.5),reduced?0.05:1.3,function(){
-    jazzOpenUp(); rainInside();
-    flyTo(orbitPos(),orbit.target,reduced?0.05:1.7,function(){
-      state.mode='orbit';
-      document.body.classList.add('entered');
-      setStatus('INSIDE','드래그 회전 · 휠/핀치 줌 · 구역 클릭');
-      startCrackle();
-      /* door swings shut behind you */
-      setTimeout(function(){ doorAnim={t:1,dir:-1}; },300);
-      if(after) setTimeout(after,300);
-    });
-  });
+  if(actBtn) actBtn.classList.remove('show');
+  setStatus('ENTERING','');
+  enterScript={phase:0,after:after||null,crossed:false,waitT:0};
 }
 
 /* ============================================================
@@ -1391,26 +1647,77 @@ function animate(){
     else doorPivot.rotation.y=(doorPivot.rotation.y>0.9)?1.85:0;
   }
 
-  /* camera */
-  if(tween){
-    tween.t+=dt/tween.dur;
-    var k=ease(Math.min(tween.t,1));
-    camera.position.lerpVectors(tween.p0,tween.p1,k);
-    curTarget.lerpVectors(tween.t0,tween.t1,k);
-    if(tween.t>=1){var d=tween.done; tween=null; if(d)d();}
-  } else if(state.mode==='orbit'){
-    camera.position.lerp(orbitPos(),0.1);
-    curTarget.lerp(orbit.target,0.1);
-  } else if(state.mode==='street'){
-    var bob=reduced?0:Math.sin(t*1.1)*0.02;
-    camera.position.lerp(new THREE.Vector3(STREET_POS.x,STREET_POS.y+bob,STREET_POS.z),0.08);
-    var lt=new THREE.Vector3(
-      STREET_TGT.x+Math.sin(streetLook.yaw)*5,
-      STREET_TGT.y-streetLook.pitch*5,
-      STREET_TGT.z-(1-Math.cos(streetLook.yaw))*3
-    );
-    curTarget.lerp(lt,0.08);
+  /* avatar movement + follow camera */
+  if(state.mode==='walk'){
+    var ix=(keys.d?1:0)-(keys.a?1:0)+joyVec.x;
+    var iz=(keys.s?1:0)-(keys.w?1:0)+joyVec.y;
+    var il=Math.hypot(ix,iz);
+    if(il>1){ix/=il; iz/=il;}
+    var fx=-Math.sin(orbit.theta), fz=-Math.cos(orbit.theta);
+    var rx=-Math.cos(orbit.theta), rz=Math.sin(orbit.theta);
+    var mvx=fx*(-iz)+rx*ix, mvz=fz*(-iz)+rz*ix;
+    var tgtSpd=(il>0.05)?2.3:0;
+    avatar.speed+=(tgtSpd-avatar.speed)*Math.min(1,dt*9);
+    if(avatar.speed>0.02&&il>0.05){
+      var ml=Math.hypot(mvx,mvz)||1;
+      var np=avatar.pos.clone();
+      np.x+=mvx/ml*avatar.speed*dt;
+      np.z+=mvz/ml*avatar.speed*dt;
+      collide(np); avatar.pos.copy(np);
+      avatar.heading=lerpAng(avatar.heading,Math.atan2(mvx,mvz),Math.min(1,dt*10));
+    }
+    scanInteract();
+  } else if(state.mode==='enter'&&enterScript){
+    if(enterScript.phase===1){
+      avatar.speed+=(0-avatar.speed)*Math.min(1,dt*10);
+      enterScript.waitT+=dt;
+      if(enterScript.waitT>0.8) enterScript.phase=2;
+    } else {
+      var wp=(enterScript.phase===0)?{x:DOOR_X,z:FRONT_Z+0.55}:{x:DOOR_X-0.15,z:2.2};
+      var ddx=wp.x-avatar.pos.x, ddz=wp.z-avatar.pos.z, dd2=Math.hypot(ddx,ddz);
+      if(dd2>0.09){
+        avatar.speed+=(1.9-avatar.speed)*Math.min(1,dt*8);
+        var np2=avatar.pos.clone();
+        np2.x+=ddx/dd2*avatar.speed*dt; np2.z+=ddz/dd2*avatar.speed*dt;
+        collide(np2); avatar.pos.copy(np2);
+        avatar.heading=lerpAng(avatar.heading,Math.atan2(ddx,ddz),Math.min(1,dt*8));
+      } else if(enterScript.phase===0){
+        enterScript.phase=1;
+        doorBell(); doorAnim={t:0,dir:1};
+      } else {
+        state.inside=true; state.mode='walk';
+        document.body.classList.add('entered');
+        setStatus('INSIDE','');
+        startCrackle();
+        orbit.radius=rClamp(3.2);
+        setTimeout(function(){ doorAnim={t:1,dir:-1}; },450);
+        var aft=enterScript.after; enterScript=null;
+        if(aft) setTimeout(aft,250);
+      }
+    }
+    if(enterScript){
+      if(!enterScript.crossed&&avatar.pos.z<4.42){
+        enterScript.crossed=true; jazzOpenUp(); rainInside();
+      }
+      orbit.theta=lerpAng(orbit.theta,0,Math.min(1,dt*2.2));
+      orbit.phi+=(0.2-orbit.phi)*Math.min(1,dt*2.2);
+      orbit.radius+=(2.0-orbit.radius)*Math.min(1,dt*2.2);
+    }
   }
+  /* walking animation */
+  var spdK=Math.min(1,avatar.speed/1.4);
+  if(spdK>0.02) avatar.phase+=avatar.speed*dt*4.4;
+  var sw1=Math.sin(avatar.phase)*0.55*spdK;
+  avatar.ch.legL.rotation.x=sw1;
+  avatar.ch.legR.rotation.x=-sw1;
+  avatar.ch.armL.rotation.x=-sw1*0.55;
+  avatar.ch.armR.rotation.x=sw1*0.55;
+  avatar.ch.g.position.set(avatar.pos.x,(reduced?0:Math.abs(Math.sin(avatar.phase))*0.035*spdK),avatar.pos.z);
+  avatar.ch.g.rotation.y=avatar.heading;
+  /* camera follows the avatar */
+  var camT=new THREE.Vector3(avatar.pos.x,avatar.pos.y+1.25,avatar.pos.z);
+  camera.position.lerp(camPos(camT),0.12);
+  curTarget.lerp(camT,0.16);
   camera.lookAt(curTarget);
 
   /* rain fall */
@@ -1446,6 +1753,16 @@ function animate(){
   });
   if(catTail) catTail.rotation.z=Math.sin(t*1.6)*0.38;
   if(catBodyMesh) catBodyMesh.scale.y=1.1+Math.sin(t*2)*0.012;
+  if(musicianCh){
+    musicianCh.armL.rotation.x=-0.7+Math.sin(t*3.4)*0.11;
+    musicianCh.head.rotation.z=Math.sin(t*0.9)*0.07;
+    musicianCh.head.rotation.x=-0.04+Math.sin(t*0.45)*0.03;
+  }
+  if(bartenderCh){
+    bartenderCh.armL.rotation.z=0.35+Math.sin(t*2.6)*0.1;
+    bartenderCh.armL.rotation.x=-0.85+Math.cos(t*2.6)*0.06;
+    bartenderCh.head.rotation.x=Math.sin(t*0.5)*0.04;
+  }
   if(catAnim.hop>0){
     catAnim.hop=Math.max(0,catAnim.hop-dt*2.4);
     var h=Math.sin((1-catAnim.hop)*Math.PI);
@@ -1458,7 +1775,7 @@ function animate(){
   });
 
   /* labels */
-  if(state.mode==='orbit'&&state.entered){
+  if(state.inside&&state.mode==='walk'){
     Object.keys(ZONES).forEach(function(k){
       var z=ZONES[k],v=z.anchor.clone().project(camera);
       var hide=v.z>1;
@@ -1471,11 +1788,22 @@ function animate(){
   } else {
     Object.keys(ZONES).forEach(function(k){ZONES[k].el.classList.add('hidden');});
   }
-  if(state.mode==='street'){
+  if(!state.inside&&state.mode==='walk'){
     var dv=doorAnchor.clone().project(camera);
     if(dv.z<=1){
       doorLabel.style.left=((dv.x*0.5+0.5)*window.innerWidth)+'px';
       doorLabel.style.top=((-dv.y*0.5+0.5)*window.innerHeight)+'px';
+    }
+  }
+  if(!bubble.classList.contains('hidden')){
+    if(performance.now()>bubbleState.until){ bubble.classList.add('hidden'); }
+    else{
+      var bv=bubbleState.anchor.clone().project(camera);
+      if(bv.z>1) bubble.classList.add('hidden');
+      else{
+        bubble.style.left=((bv.x*0.5+0.5)*window.innerWidth)+'px';
+        bubble.style.top=((-bv.y*0.5+0.5)*window.innerHeight)+'px';
+      }
     }
   }
 
