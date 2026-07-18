@@ -452,6 +452,20 @@ function brickMat(rx,ry){
   return new THREE.MeshStandardMaterial({map:t,roughness:0.95});
 }
 
+/* fake-bloom: soft additive halo sprite for light sources */
+var glowTex=texCanvas(128,128,function(g,w,h){
+  var gr=g.createRadialGradient(64,64,4,64,64,62);
+  gr.addColorStop(0,'rgba(255,255,255,0.85)');
+  gr.addColorStop(0.35,'rgba(255,255,255,0.28)');
+  gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,w,h);
+});
+function addGlow(x,y,z,color,size,opacity){
+  var m=new THREE.SpriteMaterial({map:glowTex,color:color,transparent:true,opacity:opacity,depthWrite:false,blending:THREE.AdditiveBlending});
+  var s=new THREE.Sprite(m); s.scale.set(size,size,1); s.position.set(x,y,z);
+  scene.add(s); return s;
+}
+
 /* ============================================================
    INTERIOR ROOM — 12 x 9, enclosed, door on front wall
 ============================================================ */
@@ -768,14 +782,27 @@ function makeCharacter(o){
 }
 function makeGuitar(){
   var G=new THREE.Group();
-  var gLower=ball(0.27,0x9A6430,0,0,0,G,{rough:0.32}); gLower.scale.set(1,0.9,0.3);
-  var gUpper=ball(0.205,0x9A6430,0,0.29,0,G,{rough:0.32}); gUpper.scale.set(0.86,0.78,0.29);
-  var shl=cyl(0.056,0.056,0.02,0x120D09,0,0.12,0.075,G,16,{rough:0.8});
+  /* smooth figure-8 body: beveled extrusion of a real outline */
+  var s=new THREE.Shape();
+  s.moveTo(0,-0.30);
+  s.bezierCurveTo(0.20,-0.30,0.28,-0.19,0.27,-0.08);
+  s.bezierCurveTo(0.26,0.01,0.17,0.03,0.165,0.09);
+  s.bezierCurveTo(0.16,0.16,0.22,0.18,0.21,0.25);
+  s.bezierCurveTo(0.20,0.32,0.10,0.35,0,0.35);
+  s.bezierCurveTo(-0.10,0.35,-0.20,0.32,-0.21,0.25);
+  s.bezierCurveTo(-0.22,0.18,-0.16,0.16,-0.165,0.09);
+  s.bezierCurveTo(-0.17,0.03,-0.26,0.01,-0.27,-0.08);
+  s.bezierCurveTo(-0.28,-0.19,-0.20,-0.30,0,-0.30);
+  var bodyGeo=new THREE.ExtrudeGeometry(s,{depth:0.07,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.02,bevelSegments:3,curveSegments:20});
+  bodyGeo.translate(0,0,-0.035);
+  var body=new THREE.Mesh(bodyGeo,mat(0x9A6430,{rough:0.3}));
+  body.castShadow=true; body.receiveShadow=true; G.add(body);
+  var shl=cyl(0.056,0.056,0.02,0x120D09,0,0.12,0.06,G,16,{rough:0.8});
   shl.rotation.x=Math.PI/2;
-  box(0.1,0.026,0.014,0x120D09,0,-0.1,0.076,G);
+  box(0.1,0.026,0.014,0x120D09,0,-0.1,0.063,G);
   box(0.046,0.64,0.03,0x3A2417,0,0.6,0.055,G,{rough:0.5});
   box(0.04,0.6,0.008,0x1B120C,0,0.6,0.074,G,{rough:0.6});
-  box(0.014,1.0,0.003,0xCFC3AA,0,0.4,0.08,G,{rough:0.4});
+  box(0.014,1.0,0.003,0xCFC3AA,0,0.4,0.078,G,{rough:0.4});
   var hs=box(0.06,0.15,0.026,0x1B120C,0,0.97,0.045,G,{rough:0.5});
   hs.rotation.x=-0.3;
   ball(0.012,C.brass,-0.042,0.95,0.055,G,{rough:0.3,metal:0.7});
@@ -931,14 +958,29 @@ var barGroup=new THREE.Group(); barGroup.userData.action='zone:about'; scene.add
   box(3.2,2.2,0.16,C.espresso,0,1.5,0,bb,{rough:0.7});
   var glowP=box(2.9,1.7,0.03,0xFFB769,0,1.55,0.09,bb,{emissive:0xFFA850,ei:0.6,rough:1});
   glowP.castShadow=false;
+  function bottle(col,br,bh2){
+    var pts=[
+      new THREE.Vector2(0.001,0),
+      new THREE.Vector2(br*0.85,0),
+      new THREE.Vector2(br,bh2*0.12),
+      new THREE.Vector2(br,bh2*0.62),
+      new THREE.Vector2(br*0.55,bh2*0.8),
+      new THREE.Vector2(br*0.28,bh2*0.88),
+      new THREE.Vector2(br*0.26,bh2*1.05),
+      new THREE.Vector2(br*0.3,bh2*1.08),
+      new THREE.Vector2(0.001,bh2*1.08)
+    ];
+    var m=new THREE.Mesh(new THREE.LatheGeometry(pts,14),mat(col,{transparent:true,opacity:0.72,rough:0.12}));
+    m.castShadow=true; return m;
+  }
   [0.95,1.62].forEach(function(sy){
     box(3.0,0.045,0.3,0x17110B,0,sy,0.14,bb);
     var bx=-1.35;
     while(bx<1.3){
       var col=[0x7A4A1E,0x2E4A38,0x50291E,0x6B5A2E,0x3E4A63][(Math.random()*5)|0];
-      var bh2=0.26+Math.random()*0.2, br=0.045+Math.random()*0.02;
-      var bt=cyl(br,br,bh2,col,bx,sy+bh2/2+0.02,0.22,bb,10,{transparent:true,opacity:0.62,rough:0.15});
-      cyl(0.014,0.014,0.07,col,bx,sy+bh2+0.05,0.22,bb,8,{transparent:true,opacity:0.62,rough:0.15});
+      var bh2=0.26+Math.random()*0.2, br=0.05+Math.random()*0.02;
+      var bt=bottle(col,br,bh2);
+      bt.position.set(bx,sy+0.02,0.22); bb.add(bt);
       bx+=br*2+0.09;
     }
   });
@@ -1073,6 +1115,24 @@ var dust=[];
     sp.userData={ph:Math.random()*10,sp:0.08+Math.random()*0.16};
     scene.add(sp); dust.push(sp);
   }
+})();
+
+/* --- fake-bloom pass: halos on every light source --- */
+(function(){
+  addGlow(3.55,3.12,FRONT_Z+1.05,0xDCE8F5,2.8,0.45);   /* lightbox sign */
+  addGlow(3.55,3.12,FRONT_Z+1.05,0xFFFFFF,1.3,0.35);
+  addGlow(DOOR_X,2.26,FRONT_Z+0.55,0xFFD9A0,1.2,0.5);  /* awning bulb */
+  addGlow(DOOR_X,1.6,FRONT_Z+0.14,0xFFD79A,0.9,0.4);   /* door arch glass */
+  addGlow(-1.7,1.9,FRONT_Z+0.3,0xFFC98A,1.7,0.35);     /* blind window */
+  addGlow(-3.5,2.55,BACK_Z+0.1,0xFFE2BC,2.3,0.5);      /* neon script */
+  addGlow(-3.5,2.55,BACK_Z+0.1,0xFFF3E0,1.1,0.4);
+  addGlow(5.5,1.6,1.3,0xFFB066,2.4,0.35);              /* backbar bottles */
+  addGlow(-0.7,2.36,0.6,0xFFD9A0,0.85,0.5);            /* pendants */
+  addGlow(1.6,2.36,-1.1,0xFFD9A0,0.85,0.5);
+  addGlow(2.32,1.05,-3.35,0x6FCF97,0.6,0.4);           /* banker's lamp */
+  addGlow(5.1,1.85,-2.6,0xFFD9A0,1.0,0.4);             /* floor lamp */
+  addGlow(-0.6,0.95,0.65,0xFFB25A,0.42,0.5);           /* candles */
+  addGlow(1.7,0.95,-1.05,0xFFB25A,0.42,0.5);
 })();
 
 /* ============================================================
@@ -1654,7 +1714,7 @@ function animate(){
     var il=Math.hypot(ix,iz);
     if(il>1){ix/=il; iz/=il;}
     var fx=-Math.sin(orbit.theta), fz=-Math.cos(orbit.theta);
-    var rx=-Math.cos(orbit.theta), rz=Math.sin(orbit.theta);
+    var rx=Math.cos(orbit.theta), rz=-Math.sin(orbit.theta);
     var mvx=fx*(-iz)+rx*ix, mvz=fz*(-iz)+rz*ix;
     var tgtSpd=(il>0.05)?2.3:0;
     avatar.speed+=(tgtSpd-avatar.speed)*Math.min(1,dt*9);
